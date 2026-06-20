@@ -597,7 +597,7 @@ function renderPalette(){
     const b=document.createElement('button');
     b.className='pblock '+d.cls;
     b.innerHTML=`${d.icon}<span>${d.label}</span><span class="plus">+</span>`;
-    b.onclick=()=>{ if(!animating){ addBlock(group); } };
+    b.onclick=()=>{ if(!animating){ addBlock(key); } };
     pal.appendChild(b);
   }
 }
