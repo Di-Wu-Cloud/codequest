@@ -81,6 +81,10 @@
   .c-move{background:var(--mint)} .c-turn{background:var(--pink)}
   .c-repeat{background:var(--violet)} .c-if{background:var(--sky)}
   .c-until{background:#f2a65a}
+  .c-fn{background:#5fcf80}
+  .blk.b-fn{background:#5fcf80}
+  .container.b-fn{background:rgba(95,207,128,.16);border:1px solid #5fcf80}
+  .b-fn .chead{background:#5fcf80}
   .pblock.lock{background:#2c2358;color:var(--muted);box-shadow:none;cursor:default}
   .plus{font-weight:700;opacity:.7}
 
@@ -343,7 +347,8 @@ function simulate(level, ast){
   const blocked=(x,y)=> x<0||y<0||x>=W||y>=H||wall.has(x+','+y);
   let st={x:level.start.x,y:level.start.y,dir:level.start.dir};
   const frames=[{x:st.x,y:st.y,dir:st.dir,kind:'start'}];
-  let outcome='incomplete', steps=0; const LIMIT=8000; let finished=false;
+  let outcome='incomplete', steps=0; const LIMIT=8000; let finished=false, depth=0;
+  const routine=(ast.find(n=>n.type==='define')||{}).body||[];
   const onGoal=()=> st.x===level.goal.x && st.y===level.goal.y;
   function clearRel(rel){const d=(st.dir+rel)%4;const[dx,dy]=DIRD[d];return !blocked(st.x+dx,st.y+dy);}
   function cond(c){return c==='right'?clearRel(1):c==='left'?clearRel(3):clearRel(0);}
@@ -361,6 +366,8 @@ function simulate(level, ast){
       if(n.type==='move')move();
       else if(n.type==='left')turn('left');
       else if(n.type==='right')turn('right');
+      else if(n.type==='define'){/* a routine definition does not run on its own */}
+      else if(n.type==='call'){depth++; if(depth>256){finished=true;outcome='loop';} else run(routine); depth--;}
       else if(n.type==='repeat'){for(let k=0;k<n.n;k++){if(finished)return;run(n.body);}}
       else if(n.type==='until'){let g=0;while(!finished&&!onGoal()){run(n.body);if(++g>4000){finished=true;outcome='loop';break;}}}
       else if(n.type==='if'){if(cond(n.cond||'ahead'))run(n.then);else run(n.else);}
@@ -374,6 +381,7 @@ function countTree(nodes){
   let c=0;
   for(const n of nodes){
     if(n.type==='repeat'||n.type==='until')c+=2+countTree(n.body);
+    else if(n.type==='define')c+=countTree(n.body);
     else if(n.type==='if')c+=3+countTree(n.then)+countTree(n.else);
     else c+=1;
   }
@@ -488,7 +496,19 @@ const LEVELS=[
   hints:["Dead ends are fine — the rule backs out of them by itself.","If clear right: Turn right, Move. Else if clear ahead: Move. Else: Turn left.","Repeat-until the battery."]},
  {id:36,title:"The labyrinth",concept:"A complete algorithm",W:11,H:11,start:{x:1,y:1,dir:0},goal:{x:9,y:9},
   walls:["0,0","1,0","2,0","3,0","4,0","5,0","6,0","7,0","8,0","9,0","10,0","0,1","2,1","10,1","0,2","2,2","4,2","5,2","6,2","8,2","10,2","0,3","2,3","4,3","8,3","10,3","0,4","2,4","3,4","4,4","6,4","7,4","8,4","10,4","0,5","4,5","8,5","10,5","0,6","1,6","2,6","4,6","5,6","6,6","8,6","9,6","10,6","0,7","2,7","6,7","10,7","0,8","2,8","3,8","4,8","6,8","7,8","8,8","10,8","0,9","10,9","0,10","1,10","2,10","3,10","4,10","5,10","6,10","7,10","8,10","9,10","10,10"],opt:12,two:16,tools:["move","turn","repeat","until","ifdir"],
-  hints:["The biggest maze yet — but the same rule still solves it.","If clear right: Turn right, Move. Otherwise if clear ahead: Move. Otherwise: Turn left.","Repeat-until the battery and let the algorithm work."]}
+  hints:["The biggest maze yet — but the same rule still solves it.","If clear right: Turn right, Move. Otherwise if clear ahead: Move. Otherwise: Turn left.","Repeat-until the battery and let the algorithm work."]},
+ {id:37,title:"Teach Bolt a move",concept:"Functions: define once, reuse",W:8,H:4,start:{x:0,y:0,dir:0},goal:{x:7,y:3},
+  walls:["2,0","3,0","4,0","5,0","6,0","7,0","0,1","4,1","5,1","6,1","7,1","0,2","1,2","2,2","0,3","1,3","2,3","3,3","4,3","5,3","6,3"],opt:11,two:15,tools:["move","turn","repeat","function"],
+  hints:["The same little move happens three times along the path.","Build it once in Define routine: Move, Turn right, Move, Turn left.","Then drop 'Do routine' at each spot, with the right Moves in between."]},
+ {id:38,title:"Routine at the junction",concept:"Functions inside branching",W:7,H:4,start:{x:0,y:0,dir:0},goal:{x:6,y:3},
+  walls:["1,0","2,0","1,1","2,1","4,1","5,1","1,2","2,2","4,2","5,2","4,3","5,3"],opt:15,two:18,tools:["move","turn","repeat","until","ifdir","function"],
+  hints:["This is a maze — let Bolt decide at each junction, like the earlier maze levels.","First teach Bolt to advance to the next junction: Define routine = Repeat 3 of Move.","Then the right-hand rule, calling the routine to advance: if clear right → Turn right, Do routine; otherwise if clear ahead → Do routine; otherwise Turn left — all inside Repeat until the battery."]},
+ {id:39,title:"The wider maze",concept:"Reusing a routine in a decision",W:7,H:7,start:{x:0,y:0,dir:0},goal:{x:6,y:6},
+  walls:["1,0","2,0","1,1","2,1","4,1","5,1","1,2","2,2","4,2","5,2","4,3","5,3","0,4","1,4","2,4","3,4","4,4","5,4","0,5","1,5","2,5","3,5","4,5","5,5"],opt:15,two:18,tools:["move","turn","repeat","until","ifdir","function"],
+  hints:["A bigger maze, same plan as the last level.","Define routine = Repeat 3 of Move to reach the next junction.","Right-hand rule: if clear right → Turn right, Do routine; else if clear ahead → Do routine; else Turn left — inside Repeat until the battery."]},
+ {id:40,title:"Bolt's maze runner",concept:"Functions + branching: a real program",W:10,H:7,start:{x:0,y:0,dir:0},goal:{x:9,y:6},
+  walls:["1,0","2,0","1,1","2,1","4,1","5,1","6,1","7,1","8,1","1,2","2,2","4,2","5,2","6,2","7,2","8,2","1,3","2,3","4,3","5,3","7,3","8,3","1,4","2,4","4,4","5,4","7,4","8,4","1,5","2,5","4,5","5,5","7,5","8,5","4,6","5,6"],opt:15,two:18,tools:["move","turn","repeat","until","ifdir","function"],
+  hints:["The biggest maze yet — but your algorithm already handles any size.","Define routine = Repeat 3 of Move.","Right-hand rule with Do routine in the branches, inside Repeat until the battery."]}
 ];
 
 /* ===================================================================
@@ -572,7 +592,9 @@ const IC={
   right:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l5 5-5 5M20 10h-9a5 5 0 0 0-5 5v4"/></svg>',
   repeat:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a5 5 0 0 1 5-5h7l-2-2m2 2-2 2M20 15a5 5 0 0 1-5 5H8l2 2m-2-2 2-2"/></svg>',
   if:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6M18 3v6a3 3 0 0 1-3 3H9m9 9v-6"/></svg>',
-  until:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a5 5 0 0 1 5-5h7l-2-2m2 2-2 2M20 15a5 5 0 0 1-5 5H8l2 2m-2-2 2-2"/><circle cx="12" cy="12" r="2.2" fill="#1a1330" stroke="none"/></svg>'
+  until:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a5 5 0 0 1 5-5h7l-2-2m2 2-2 2M20 15a5 5 0 0 1-5 5H8l2 2m-2-2 2-2"/><circle cx="12" cy="12" r="2.2" fill="#1a1330" stroke="none"/></svg>',
+  define:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h2M16 4h2a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2h-2"/></svg>',
+  call:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1330" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z" fill="#1a1330"/></svg>'
 };
 function starSVG(filled,size){return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled?'var(--gold)':'none'}" stroke="var(--gold)" stroke-width="1.6"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 21.2l1.4-6.8L2.2 9.8l6.9-.7z"/></svg>`;}
 
@@ -586,11 +608,13 @@ const TOOLDEF={
   repeat:{cls:'c-repeat',label:'Repeat',icon:IC.repeat},
   until:{cls:'c-until',label:'Repeat until battery',icon:IC.until},
   if:{cls:'c-if',label:'If path is clear',icon:IC.if},
+  define:{cls:'c-fn',label:'Define routine',icon:IC.define},
+  call:{cls:'c-fn',label:'Do routine',icon:IC.call},
 };
 function renderPalette(){
   const pal=$('palette'); pal.innerHTML='';
   const tools=current.tools;
-  const order=[['move','move'],['turn','left'],['turn','right'],['repeat','repeat'],['until','until'],['if','if'],['ifdir','if']];
+  const order=[['move','move'],['turn','left'],['turn','right'],['repeat','repeat'],['until','until'],['if','if'],['ifdir','if'],['function','define'],['function','call']];
   for(const [group,key] of order){
     if(!tools.includes(group)) continue;
     const d=TOOLDEF[key];
@@ -619,6 +643,12 @@ function addBlock(key){
     const node={type:'until',body:[],id:++nodeId};
     target.push(node);
     cursorStack.push({arr:node.body,label:'Repeat until battery',node});
+  }else if(key==='define'){
+    let def=program.find(n=>n.type==='define');
+    if(!def){ def={type:'define',body:[],id:++nodeId}; program.unshift(def); }
+    cursorStack=[{arr:program,label:'Program'},{arr:def.body,label:'Routine',node:def}];
+  }else if(key==='call'){
+    target.push({type:'call',id:++nodeId});
   }else if(key==='if'||key==='ifdir'){
     const node={type:'if',cond:'ahead',then:[],else:[],id:++nodeId};
     target.push(node);
@@ -642,6 +672,7 @@ function removeNode(id){
       const n=arr[i];
       if(n.type==='repeat'&&rm(n.body))return true;
       if(n.type==='until'&&rm(n.body))return true;
+      if(n.type==='define'&&rm(n.body))return true;
       if(n.type==='if'&&(rm(n.then)||rm(n.else)))return true;
     }
     return false;
@@ -690,6 +721,26 @@ function renderNode(n, ro){
     el.innerHTML=`${d.icon}<span>${d.label}</span>${ro?'':'<button class="x" title="Remove">×</button>'}`;
     if(!ro) el.querySelector('.x').onclick=()=>{ if(!animating) removeNode(n.id); };
     return el;
+  }
+  if(n.type==='call'){
+    const el=document.createElement('div');
+    el.className='blk b-fn'; el.dataset.nid=n.id;
+    el.innerHTML=`${IC.call}<span>Do routine</span>${ro?'':'<button class="x" title="Remove">×</button>'}`;
+    if(!ro) el.querySelector('.x').onclick=()=>{ if(!animating) removeNode(n.id); };
+    return el;
+  }
+  if(n.type==='define'){
+    const wrap=document.createElement('div'); wrap.className='container b-fn';
+    const head=document.createElement('div'); head.className='chead';
+    head.innerHTML=`${IC.define}<span>Define routine</span>`;
+    if(!ro){ const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.title='Remove';
+      x.onclick=()=>{ if(!animating) removeNode(n.id); }; head.appendChild(x); }
+    wrap.appendChild(head);
+    const zone=document.createElement('div'); zone.className='body-zone';
+    if(n.body.length===0) zone.innerHTML='<div class="zempty">(empty — add the moves Bolt should learn)</div>';
+    else zone.appendChild(renderSeq(n.body, ro));
+    wrap.appendChild(zone);
+    return wrap;
   }
   if(n.type==='repeat'){
     const wrap=document.createElement('div'); wrap.className='container b-repeat';
@@ -1047,12 +1098,17 @@ const LESSONS={
   33:"A good algorithm solves not just one maze but every maze of its kind. This right-hand rule keeps a wall on Bolt's right and always finds the way through.",
   34:"You don't rewrite the program as the maze grows. That's the power of an algorithm: write the decision once and it scales to any size.",
   35:"At a dead end, 'otherwise turn left' makes Bolt turn around over a few steps and keep searching. A complete rule has an answer for every case it can meet.",
-  36:"You've built a maze-solving algorithm: a loop, branching decisions, and sensors working together. The same dozen blocks would solve a maze ten times this size."
+  36:"You've built a maze-solving algorithm: a loop, branching decisions, and sensors working together. The same dozen blocks would solve a maze ten times this size.",
+  37:"A function lets you teach Bolt a move once and reuse it. Build the move inside Define routine, then use 'Do routine' wherever you need it — far fewer blocks than repeating the move by hand.",
+  38:"Functions and branching work together. Teach Bolt to advance one step of the maze as a routine, then call that routine inside your if/else decisions — the same right-hand rule, now built from a reusable move.",
+  39:"Notice the routine is called in two different branches of your if/else. Defining it once keeps your decision logic short and clear instead of repeating the same moves.",
+  40:"A routine, plus branching, plus a loop is a real program: small named pieces combined by decisions. This same handful of blocks would solve a maze of any size."
 };
 function solutionTemplate(id){
   const M=()=>({type:'move'}), R=()=>({type:'right'}), L=()=>({type:'left'});
   const rep=(n,b)=>({type:'repeat',n,body:b}), iff=(t,e)=>({type:'if',cond:'ahead',then:t,else:e});
   const until=(b)=>({type:'until',body:b}), ifc=(c,t,e)=>({type:'if',cond:c,then:t,else:e});
+  const define=(b)=>({type:'define',body:b}), call=()=>({type:'call'});
   switch(id){
     case 1: return [M(),M(),M(),M()];
     case 2: return [M(),M(),R(),M(),M()];
@@ -1090,6 +1146,10 @@ function solutionTemplate(id){
     case 34: return [until([ifc('right',[R(),M()],[ifc('ahead',[M()],[L()])])])];
     case 35: return [until([ifc('right',[R(),M()],[ifc('ahead',[M()],[L()])])])];
     case 36: return [until([ifc('right',[R(),M()],[ifc('ahead',[M()],[L()])])])];
+    case 37: return [define([M(),R(),M(),L()]),call(),M(),call(),M(),M(),M(),call()];
+    case 38: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
+    case 39: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
+    case 40: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
   }
   return [];
 }
@@ -1097,6 +1157,8 @@ function cloneSolution(nodes){
   return nodes.map(n=>{
     if(n.type==='repeat') return {type:'repeat',n:n.n,body:cloneSolution(n.body),id:++nodeId};
     if(n.type==='until')  return {type:'until',body:cloneSolution(n.body),id:++nodeId};
+    if(n.type==='define') return {type:'define',body:cloneSolution(n.body),id:++nodeId};
+    if(n.type==='call')   return {type:'call',id:++nodeId};
     if(n.type==='if')     return {type:'if',cond:n.cond||'ahead',then:cloneSolution(n.then),else:cloneSolution(n.else),id:++nodeId};
     return {type:n.type,id:++nodeId};
   });
