@@ -85,6 +85,8 @@
   .blk.b-fn{background:#5fcf80}
   .container.b-fn{background:rgba(95,207,128,.16);border:1px solid #5fcf80}
   .b-fn .chead{background:#5fcf80}
+  .ntog{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.18);color:#1a1330;font-family:var(--display);margin-left:2px}
+  .ntog.on{background:#fff}
   .pblock.lock{background:#2c2358;color:var(--muted);box-shadow:none;cursor:default}
   .plus{font-weight:700;opacity:.7}
 
@@ -158,6 +160,30 @@
   /* ---------- Overlays ---------- */
   .overlay{position:fixed;inset:0;background:rgba(12,8,28,.72);display:none;place-items:center;z-index:50;padding:20px}
   .overlay.show{display:grid}
+  .sheet.guide{max-width:600px}
+  .powers{display:flex;flex-direction:column;gap:12px;margin:8px 0 4px}
+  .power{display:flex;gap:13px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+  .pnum{flex:0 0 auto;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:17px;color:#1a1330}
+  .power:nth-child(1) .pnum{background:var(--mint)}
+  .power:nth-child(2) .pnum{background:var(--sky)}
+  .power:nth-child(3) .pnum{background:var(--gold)}
+  .ptitle{font-family:var(--display);font-weight:600;font-size:15.5px;color:var(--ink);margin-bottom:3px}
+  .pbody{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .pbody i{color:var(--ink);font-style:italic}
+  .pbody b,.gtip b{color:var(--ink)}
+  .gtip{text-align:center;font-family:var(--display);font-size:14px;color:var(--ink);background:rgba(255,210,63,.12);border:1px solid rgba(255,210,63,.35);border-radius:12px;padding:10px 12px;margin-top:10px}
+  .introtag{display:inline-block;font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--mint);background:rgba(55,217,196,.14);border:1px solid rgba(55,217,196,.4);padding:4px 10px;border-radius:999px;margin-bottom:8px}
+  .introbody p{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 11px}
+  .introbody b{color:var(--ink)}
+  .introbody .small-note{font-size:13px;color:var(--muted)}
+  .ex{display:inline-block;font-family:var(--display);font-weight:600;font-size:12px;color:#1a1330;padding:2px 8px;border-radius:7px;margin:1px 2px;white-space:nowrap}
+  .ex-move{background:var(--mint)} .ex-turn{background:var(--pink)} .ex-loop{background:var(--violet)}
+  .ex-if{background:var(--sky)} .ex-until{background:#f2a65a} .ex-fn{background:#5fcf80}
+  .iseq{list-style:none;padding:0;margin:6px 0 11px;display:flex;flex-direction:column;gap:5px}
+  .iseq li{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:13.5px;color:var(--ink)}
+  .iseq b{color:var(--gold)}
+  .cb-ex{flex:0 0 auto;margin-left:auto;align-self:center;font-family:var(--display);font-weight:600;font-size:12.5px;color:#1a1330;background:var(--gold);border-radius:9px;padding:6px 12px;white-space:nowrap}
+  @media (max-width:880px){ .cb-ex{margin-left:0} }
   .sheet{width:min(680px,100%);max-height:88vh;overflow:auto;background:linear-gradient(var(--panel),var(--bg2));
          border:1px solid var(--line);border-radius:22px;padding:24px}
   .sheet h2{margin:0 0 4px;font-size:24px}
@@ -238,6 +264,7 @@
   <div class="right">
     <span class="pill" title="Stars on this level"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 21.2l1.4-6.8L2.2 9.8l6.9-.7z"/></svg><span id="lvlStars">0 / 3</span></span>
     <button class="btn" id="hintBtn">Hint</button>
+    <button class="btn" id="guideBtn" title="How to solve any puzzle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 18h6M10 21h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg> How to solve</button>
     <button class="btn" id="mapBtn">Level map</button>
     <button class="btn" id="switchBtn" title="Switch player" style="display:none"></button>
   </div>
@@ -246,6 +273,7 @@
 <div class="conceptbar" id="conceptBar">
   <span class="cb-tag">You're learning</span>
   <div class="cb-text"><b id="cbTitle"></b><span id="cbBody"></span></div>
+  <button class="cb-ex" id="cbExample">See an example</button>
 </div>
 
 <div class="game">
@@ -335,6 +363,53 @@
   </div>
 </div>
 
+<!-- HOW TO SOLVE guide overlay -->
+<div class="overlay" id="guideOverlay">
+  <div class="sheet guide">
+    <h2>Bolt's Puzzle Powers</h2>
+    <p class="lead">Every level is a puzzle. Here are the three secret powers Bolt uses to crack <b>any</b> of them. Use these and you'll always find a way through!</p>
+    <div class="powers">
+      <div class="power">
+        <div class="pnum">1</div>
+        <div class="ptext">
+          <div class="ptitle">Find the tiny true things</div>
+          <div class="pbody">Big puzzles are built out of tiny true things. Bolt can only do simple stuff — take one step, turn, and peek to see if the way is clear. So don't stare at the whole giant maze! Ask the small, true questions: <i>Where is Bolt right now? Where's the battery? What's the very next thing Bolt can really do?</i> Start from what's true and tiny.</div>
+        </div>
+      </div>
+      <div class="power">
+        <div class="pnum">2</div>
+        <div class="ptext">
+          <div class="ptitle">Win one tiny bit</div>
+          <div class="pbody">Don't try to win the whole level in one go — that's way too big! Pick just the <b>first</b> tiny step and get that one right. Then press Run and watch Bolt. Did it go where you wanted? Yes — high five! No — change one little thing and try again. One tiny bit at a time, and keep what works.</div>
+        </div>
+      </div>
+      <div class="power">
+        <div class="pnum">3</div>
+        <div class="ptext">
+          <div class="ptitle">Stack your wins</div>
+          <div class="pbody">A big, scary puzzle is really just lots of little puzzles stuck together. Solve the first little piece. Then snap on the next. Then the next. Every small win clicks onto the last one — and before you know it, the <b>whole</b> puzzle is done. Small steps stack up into big wins!</div>
+        </div>
+      </div>
+    </div>
+    <p class="gtip">Stuck? Make the puzzle <b>smaller</b>. Solve just the next tiny bit. That always works — you've got this!</p>
+    <div class="winrow" style="justify-content:center">
+      <button class="btn primary" id="guideClose">Got it — let's go!</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT INTRO overlay -->
+<div class="overlay" id="introOverlay">
+  <div class="sheet guide">
+    <div class="introtag" id="introTag">New idea</div>
+    <h2 id="introTitle"></h2>
+    <div class="introbody" id="introBody"></div>
+    <div class="winrow" style="justify-content:center">
+      <button class="btn primary" id="introClose">Let's try it!</button>
+    </div>
+  </div>
+</div>
+
 <script>
 "use strict";
 /* ===================================================================
@@ -347,7 +422,7 @@ function simulate(level, ast){
   const blocked=(x,y)=> x<0||y<0||x>=W||y>=H||wall.has(x+','+y);
   let st={x:level.start.x,y:level.start.y,dir:level.start.dir};
   const frames=[{x:st.x,y:st.y,dir:st.dir,kind:'start'}];
-  let outcome='incomplete', steps=0; const LIMIT=8000; let finished=false, depth=0;
+  let outcome='incomplete', steps=0; const LIMIT=8000; let finished=false, depth=0, paramN=1, counterI=0;
   const routine=(ast.find(n=>n.type==='define')||{}).body||[];
   const onGoal=()=> st.x===level.goal.x && st.y===level.goal.y;
   function clearRel(rel){const d=(st.dir+rel)%4;const[dx,dy]=DIRD[d];return !blocked(st.x+dx,st.y+dy);}
@@ -367,8 +442,8 @@ function simulate(level, ast){
       else if(n.type==='left')turn('left');
       else if(n.type==='right')turn('right');
       else if(n.type==='define'){/* a routine definition does not run on its own */}
-      else if(n.type==='call'){depth++; if(depth>256){finished=true;outcome='loop';} else run(routine); depth--;}
-      else if(n.type==='repeat'){for(let k=0;k<n.n;k++){if(finished)return;run(n.body);}}
+      else if(n.type==='call'){const prev=paramN; paramN=(n.argVar?counterI:(n.arg!=null?n.arg:1)); depth++; if(depth>256){finished=true;outcome='loop';} else run(routine); depth--; paramN=prev;}
+      else if(n.type==='repeat'){const cnt=n.useVar?paramN:n.n; const pI=counterI; for(let k=0;k<cnt;k++){if(finished)break;counterI=k+1;run(n.body);} counterI=pI;}
       else if(n.type==='until'){let g=0;while(!finished&&!onGoal()){run(n.body);if(++g>4000){finished=true;outcome='loop';break;}}}
       else if(n.type==='if'){if(cond(n.cond||'ahead'))run(n.then);else run(n.else);}
       if(finished)return;
@@ -508,7 +583,31 @@ const LEVELS=[
   hints:["A bigger maze, same plan as the last level.","Define routine = Repeat 3 of Move to reach the next junction.","Right-hand rule: if clear right → Turn right, Do routine; else if clear ahead → Do routine; else Turn left — inside Repeat until the battery."]},
  {id:40,title:"Bolt's maze runner",concept:"Functions + branching: a real program",W:10,H:7,start:{x:0,y:0,dir:0},goal:{x:9,y:6},
   walls:["1,0","2,0","1,1","2,1","4,1","5,1","6,1","7,1","8,1","1,2","2,2","4,2","5,2","6,2","7,2","8,2","1,3","2,3","4,3","5,3","7,3","8,3","1,4","2,4","4,4","5,4","7,4","8,4","1,5","2,5","4,5","5,5","7,5","8,5","4,6","5,6"],opt:15,two:18,tools:["move","turn","repeat","until","ifdir","function"],
-  hints:["The biggest maze yet — but your algorithm already handles any size.","Define routine = Repeat 3 of Move.","Right-hand rule with Do routine in the branches, inside Repeat until the battery."]}
+  hints:["The biggest maze yet — but your algorithm already handles any size.","Define routine = Repeat 3 of Move.","Right-hand rule with Do routine in the branches, inside Repeat until the battery."]},
+ {id:41,title:"Pass a number",concept:"Variables: a value you pass in",W:5,H:4,start:{x:0,y:0,dir:0},goal:{x:2,y:3},
+  walls:["0,1","1,1","2,1","3,1","0,2","1,2","2,2","3,2","0,3","1,3"],opt:7,two:10,tools:["move","turn","repeat","function","variable"],
+  hints:["Bolt walks different distances, then turns — the same move at different lengths.","Define routine (n): Repeat n of Move, then Turn right. The n is a number you pick each time you call it.","Call it three times with the right number: Do routine with n = 4, then 3, then 2."]},
+ {id:42,title:"One routine, many sizes",concept:"Reusing a routine with different values",W:6,H:5,start:{x:0,y:0,dir:0},goal:{x:2,y:2},
+  walls:["0,1","1,1","2,1","3,1","4,1","0,2","1,2","3,2","4,2","0,3","1,3","3,3","4,3","0,4","1,4"],opt:8,two:12,tools:["move","turn","repeat","function","variable"],
+  hints:["Four stretches of different lengths, each followed by a right turn.","Same routine (n): Repeat n of Move, Turn right.","Call it with n = 5, 4, 3, then 2 to match each stretch."]},
+ {id:43,title:"Growing steps",concept:"A parameter inside a bigger routine",W:11,H:5,start:{x:0,y:0,dir:0},goal:{x:10,y:4},
+  walls:["3,0","4,0","5,0","6,0","7,0","8,0","9,0","10,0","0,1","1,1","7,1","8,1","9,1","10,1","0,2","1,2","2,2","3,2","4,2","5,2","8,2","9,2","10,2","0,3","1,3","2,3","3,3","4,3","5,3","6,3","0,4","1,4","2,4","3,4","4,4","5,4","6,4","7,4","8,4","9,4"],opt:10,two:17,tools:["move","turn","repeat","function","variable"],
+  hints:["A staircase where every tread is a different length.","Define routine (n): Repeat n of Move, Turn right, Move, Turn left — one stair step with a tread of length n.","Call it with each tread: n = 2, 4, 1, then 3."]},
+ {id:44,title:"The number machine",concept:"Variables, functions and loops together",W:13,H:6,start:{x:0,y:0,dir:0},goal:{x:12,y:5},
+  walls:["4,0","5,0","6,0","7,0","8,0","9,0","10,0","11,0","12,0","0,1","1,1","2,1","5,1","6,1","7,1","8,1","9,1","10,1","11,1","12,1","0,2","1,2","2,2","3,2","9,2","10,2","11,2","12,2","0,3","1,3","2,3","3,3","4,3","5,3","6,3","7,3","11,3","12,3","0,4","1,4","2,4","3,4","4,4","5,4","6,4","7,4","8,4","9,4","0,5","1,5","2,5","3,5","4,5","5,5","6,5","7,5","8,5","9,5","10,5","11,5"],opt:11,two:20,tools:["move","turn","repeat","function","variable"],
+  hints:["The longest path yet — but it's all the same step at different sizes.","Define routine (n): Repeat n of Move, Turn right, Move, Turn left.","Call it with each tread length in order: n = 3, 1, 4, 2, then 2."]},
+ {id:45,title:"Counting steps",concept:"A counter: i changes each loop",W:11,H:5,start:{x:0,y:0,dir:0},goal:{x:10,y:4},
+  walls:["2,0","3,0","4,0","5,0","6,0","7,0","8,0","9,0","10,0","0,1","4,1","5,1","6,1","7,1","8,1","9,1","10,1","0,2","1,2","2,2","7,2","8,2","9,2","10,2","0,3","1,3","2,3","3,3","4,3","5,3","0,4","1,4","2,4","3,4","4,4","5,4","6,4","7,4","8,4","9,4"],opt:9,two:12,tools:["move","turn","repeat","function","variable","counter"],
+  hints:["The staircase grows: tread 1, then 2, then 3, then 4 — each step one longer.","Define routine (n): Repeat n of Move, Turn right, Move, Turn left.","Instead of calling it four times by hand, use Repeat 4 times and set Do routine to n = i (the loop's own count)."]},
+ {id:46,title:"Let the loop count",concept:"The counter does the work",W:16,H:6,start:{x:0,y:0,dir:0},goal:{x:15,y:5},
+  walls:["2,0","3,0","4,0","5,0","6,0","7,0","8,0","9,0","10,0","11,0","12,0","13,0","14,0","15,0","0,1","4,1","5,1","6,1","7,1","8,1","9,1","10,1","11,1","12,1","13,1","14,1","15,1","0,2","1,2","2,2","7,2","8,2","9,2","10,2","11,2","12,2","13,2","14,2","15,2","0,3","1,3","2,3","3,3","4,3","5,3","11,3","12,3","13,3","14,3","15,3","0,4","1,4","2,4","3,4","4,4","5,4","6,4","7,4","8,4","9,4","0,5","1,5","2,5","3,5","4,5","5,5","6,5","7,5","8,5","9,5","10,5","11,5","12,5","13,5","14,5"],opt:9,two:12,tools:["move","turn","repeat","function","variable","counter"],
+  hints:["Five growing steps this time.","Same routine (n), same trick: Repeat 5 times, Do routine with n = i.","Notice the program doesn't get longer when there are more steps."]},
+ {id:47,title:"The growing spiral",concept:"A counter in a new shape",W:6,H:5,start:{x:2,y:2,dir:0},goal:{x:5,y:0},
+  walls:["1,1","2,1","3,1","4,1","5,1","1,2","4,2","5,2","1,3","2,3","4,3","5,3","4,4","5,4"],opt:7,two:10,tools:["move","turn","repeat","function","variable","counter"],
+  hints:["Now the path spirals outward, each arm one longer than the last.","Define routine (n): Repeat n of Move, Turn right.","Repeat 5 times, Do routine with n = i."]},
+ {id:48,title:"Number machine deluxe",concept:"Loops, functions and a changing variable",W:8,H:7,start:{x:4,y:2,dir:0},goal:{x:0,y:6},
+  walls:["0,0","1,0","0,1","1,1","3,1","4,1","5,1","6,1","0,2","1,2","3,2","6,2","0,3","1,3","3,3","4,3","6,3","0,4","1,4","6,4","0,5","1,5","2,5","3,5","4,5","5,5","6,5"],opt:7,two:10,tools:["move","turn","repeat","function","variable","counter"],
+  hints:["A bigger spiral — seven arms — from the same tiny program.","Define routine (n): Repeat n of Move, Turn right.","Repeat 7 times, Do routine with n = i. The loop and the counter do the rest."]}
 ];
 
 /* ===================================================================
@@ -648,7 +747,7 @@ function addBlock(key){
     if(!def){ def={type:'define',body:[],id:++nodeId}; program.unshift(def); }
     cursorStack=[{arr:program,label:'Program'},{arr:def.body,label:'Routine',node:def}];
   }else if(key==='call'){
-    target.push({type:'call',id:++nodeId});
+    target.push({type:'call',arg:1,id:++nodeId});
   }else if(key==='if'||key==='ifdir'){
     const node={type:'if',cond:'ahead',then:[],else:[],id:++nodeId};
     target.push(node);
@@ -723,16 +822,43 @@ function renderNode(n, ro){
     return el;
   }
   if(n.type==='call'){
+    const counterOn = current && current.tools && current.tools.includes('counter');
+    const varOn = current && current.tools && (current.tools.includes('variable')||counterOn);
     const el=document.createElement('div');
     el.className='blk b-fn'; el.dataset.nid=n.id;
-    el.innerHTML=`${IC.call}<span>Do routine</span>${ro?'':'<button class="x" title="Remove">×</button>'}`;
-    if(!ro) el.querySelector('.x').onclick=()=>{ if(!animating) removeNode(n.id); };
+    if(varOn){
+      if(n.arg==null) n.arg=1;
+      el.innerHTML=`${IC.call}<span>Do routine</span>`;
+      const arg=document.createElement('span'); arg.className='stepper';
+      if(n.argVar){
+        arg.innerHTML=`<span style="font-weight:600">n =</span><b style="min-width:14px;text-align:center">i</b>`;
+      }else if(ro){
+        arg.innerHTML=`<span style="font-weight:600">n =</span><b style="min-width:14px;text-align:center">${n.arg}</b>`;
+      }else{
+        arg.innerHTML=`<span style="font-weight:600">n =</span><button>–</button><b style="min-width:14px;text-align:center">${n.arg}</b><button>+</button>`;
+        const [minus,plus]=arg.querySelectorAll('button');
+        minus.onclick=()=>{ if(!animating){ n.arg=Math.max(1,n.arg-1); renderProgram(); } };
+        plus.onclick=()=>{ if(!animating){ n.arg=Math.min(20,n.arg+1); renderProgram(); } };
+      }
+      el.appendChild(arg);
+      if(counterOn && !ro){
+        const tog=document.createElement('button'); tog.className='mini ntog'+(n.argVar?' on':'');
+        tog.textContent=n.argVar?'using i':'use i';
+        tog.onclick=()=>{ if(!animating){ n.argVar=!n.argVar; renderProgram(); } };
+        el.appendChild(tog);
+      }
+      if(!ro){ const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.title='Remove'; x.onclick=()=>{ if(!animating) removeNode(n.id); }; el.appendChild(x); }
+    }else{
+      el.innerHTML=`${IC.call}<span>Do routine</span>${ro?'':'<button class="x" title="Remove">×</button>'}`;
+      if(!ro) el.querySelector('.x').onclick=()=>{ if(!animating) removeNode(n.id); };
+    }
     return el;
   }
   if(n.type==='define'){
+    const varOn = current && current.tools && current.tools.includes('variable');
     const wrap=document.createElement('div'); wrap.className='container b-fn';
     const head=document.createElement('div'); head.className='chead';
-    head.innerHTML=`${IC.define}<span>Define routine</span>`;
+    head.innerHTML=`${IC.define}<span>Define routine${varOn?' (n)':''}</span>`;
     if(!ro){ const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.title='Remove';
       x.onclick=()=>{ if(!animating) removeNode(n.id); }; head.appendChild(x); }
     wrap.appendChild(head);
@@ -743,11 +869,14 @@ function renderNode(n, ro){
     return wrap;
   }
   if(n.type==='repeat'){
+    const varOn = current && current.tools && current.tools.includes('variable');
     const wrap=document.createElement('div'); wrap.className='container b-repeat';
     const head=document.createElement('div'); head.className='chead';
     head.innerHTML=`${IC.repeat}<span>Repeat</span>`;
     const step=document.createElement('span'); step.className='stepper';
-    if(ro){
+    if(n.useVar){
+      step.innerHTML=`<b style="min-width:14px;text-align:center">n</b><span style="font-weight:600">times</span>`;
+    }else if(ro){
       step.innerHTML=`<b style="min-width:18px;text-align:center">${n.n}</b><span style="font-weight:600">times</span>`;
     }else{
       step.innerHTML=`<button>–</button><b style="min-width:18px;text-align:center">${n.n}</b><button>+</button><span style="font-weight:600">times</span>`;
@@ -756,6 +885,12 @@ function renderNode(n, ro){
       plus.onclick=()=>{ if(!animating){ n.n=Math.min(20,n.n+1); renderProgram(); } };
     }
     head.appendChild(step);
+    if(varOn && !ro){
+      const tog=document.createElement('button'); tog.className='mini ntog'+(n.useVar?' on':'');
+      tog.textContent=n.useVar?'using n':'use n';
+      tog.onclick=()=>{ if(!animating){ n.useVar=!n.useVar; if(!n.useVar&&!n.n)n.n=1; renderProgram(); } };
+      head.appendChild(tog);
+    }
     if(!ro){ const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.title='Remove';
       x.onclick=()=>{ if(!animating) removeNode(n.id); }; head.appendChild(x); }
     wrap.appendChild(head);
@@ -1015,6 +1150,8 @@ function loadLevel(id){
   drawGrid(current.start);
   updateStarPill();
   setStatus("Plan Bolt's path, then run.");
+  $('cbExample').style.display = (introForLevel(current.id)!=null) ? 'inline-block' : 'none';
+  maybeShowIntro(current.id);
 }
 function updateStarPill(){ $('lvlStars').textContent=`${save.stars[current.id]||0} / 3`; }
 
@@ -1102,13 +1239,23 @@ const LESSONS={
   37:"A function lets you teach Bolt a move once and reuse it. Build the move inside Define routine, then use 'Do routine' wherever you need it — far fewer blocks than repeating the move by hand.",
   38:"Functions and branching work together. Teach Bolt to advance one step of the maze as a routine, then call that routine inside your if/else decisions — the same right-hand rule, now built from a reusable move.",
   39:"Notice the routine is called in two different branches of your if/else. Defining it once keeps your decision logic short and clear instead of repeating the same moves.",
-  40:"A routine, plus branching, plus a loop is a real program: small named pieces combined by decisions. This same handful of blocks would solve a maze of any size."
+  40:"A routine, plus branching, plus a loop is a real program: small named pieces combined by decisions. This same handful of blocks would solve a maze of any size.",
+  41:"A variable is a value you pass into a routine. Define routine (n) once, and n becomes whatever number you give it when you call it — so one routine handles every length.",
+  42:"The same routine works for every size because the length lives in the variable n. Change the number you pass and the routine does the rest — no rewriting.",
+  43:"The variable n can sit inside a bigger routine. Here it sets how long each stair tread is, while the rest of the step stays the same every time.",
+  44:"Variables, functions and loops combine into one tiny program that traces a long, irregular path. One routine plus the right numbers is all it takes.",
+  45:"A loop can count for you. Each time a Repeat runs, its counter i grows: 1, 2, 3… Pass i into your routine and it grows the same way — one short loop does the work of many calls.",
+  46:"With the counter, adding more steps just means a bigger Repeat number — the program stays exactly the same size. That's the power of letting a variable change for you.",
+  47:"The counter idea isn't just for staircases. Any pattern that grows step by step can be driven by i — define the shape once and let the loop count it up.",
+  48:"Loops, functions and a changing variable together: a handful of blocks draws an elaborate growing pattern. This is how real programs do a lot with a little."
 };
 function solutionTemplate(id){
   const M=()=>({type:'move'}), R=()=>({type:'right'}), L=()=>({type:'left'});
   const rep=(n,b)=>({type:'repeat',n,body:b}), iff=(t,e)=>({type:'if',cond:'ahead',then:t,else:e});
   const until=(b)=>({type:'until',body:b}), ifc=(c,t,e)=>({type:'if',cond:c,then:t,else:e});
   const define=(b)=>({type:'define',body:b}), call=()=>({type:'call'});
+  const callA=(a)=>({type:'call',arg:a}), repV=(b)=>({type:'repeat',useVar:true,body:b});
+  const callI=()=>({type:'call',argVar:true});
   switch(id){
     case 1: return [M(),M(),M(),M()];
     case 2: return [M(),M(),R(),M(),M()];
@@ -1150,15 +1297,23 @@ function solutionTemplate(id){
     case 38: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
     case 39: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
     case 40: return [define([rep(3,[M()])]),until([ifc('right',[R(),call()],[ifc('ahead',[call()],[L()])])])];
+    case 41: return [define([repV([M()]),R()]),callA(4),callA(3),callA(2)];
+    case 42: return [define([repV([M()]),R()]),callA(5),callA(4),callA(3),callA(2)];
+    case 43: return [define([repV([M()]),R(),M(),L()]),callA(2),callA(4),callA(1),callA(3)];
+    case 44: return [define([repV([M()]),R(),M(),L()]),callA(3),callA(1),callA(4),callA(2),callA(2)];
+    case 45: return [define([repV([M()]),R(),M(),L()]),rep(4,[callI()])];
+    case 46: return [define([repV([M()]),R(),M(),L()]),rep(5,[callI()])];
+    case 47: return [define([repV([M()]),R()]),rep(5,[callI()])];
+    case 48: return [define([repV([M()]),R()]),rep(7,[callI()])];
   }
   return [];
 }
 function cloneSolution(nodes){
   return nodes.map(n=>{
-    if(n.type==='repeat') return {type:'repeat',n:n.n,body:cloneSolution(n.body),id:++nodeId};
+    if(n.type==='repeat') return {type:'repeat',n:n.n,useVar:n.useVar,body:cloneSolution(n.body),id:++nodeId};
     if(n.type==='until')  return {type:'until',body:cloneSolution(n.body),id:++nodeId};
     if(n.type==='define') return {type:'define',body:cloneSolution(n.body),id:++nodeId};
-    if(n.type==='call')   return {type:'call',id:++nodeId};
+    if(n.type==='call')   return {type:'call',arg:n.arg,argVar:n.argVar,id:++nodeId};
     if(n.type==='if')     return {type:'if',cond:n.cond||'ahead',then:cloneSolution(n.then),else:cloneSolution(n.else),id:++nodeId};
     return {type:n.type,id:++nodeId};
   });
@@ -1243,6 +1398,82 @@ function selectProfile(id){
   pickerEditing=false; closePicker(); updateSwitchBtn();
   loadLevel(Math.min(save.unlocked, LEVELS.length));
   openMap();
+  maybeShowGuide();
+}
+let _guideShown=false;
+function guideSeen(){ try{ return localStorage.getItem('codequest.guide.v1')==='1'; }catch(e){ return _guideShown; } }
+function markGuideSeen(){ _guideShown=true; try{ localStorage.setItem('codequest.guide.v1','1'); }catch(e){} }
+function openGuide(){ $('guideOverlay').classList.add('show'); }
+function closeGuide(){ $('guideOverlay').classList.remove('show'); }
+function maybeShowGuide(){ if(!guideSeen()){ openGuide(); markGuideSeen(); } }
+
+/* ---- Concept intros: explained with examples before each new concept ---- */
+const INTRO={
+  1:{tag:'First idea',title:'Telling Bolt what to do',body:`
+    <p>Bolt follows your blocks one at a time, from top to bottom — like steps in a dance.</p>
+    <p>The basic moves are <span class="ex ex-move">Move</span> (go one square forward) and <span class="ex ex-turn">Turn left</span> <span class="ex ex-turn">Turn right</span>.</p>
+    <p><b>Example:</b> to go around a corner you might line up: <span class="ex ex-move">Move</span> <span class="ex ex-move">Move</span> <span class="ex ex-turn">Turn right</span> <span class="ex ex-move">Move</span>.</p>
+    <p>Your job: pick the right blocks, in the right order, to reach the battery. Tap a block in the palette to add it!</p>`},
+  4:{tag:'New idea',title:'Loops: do it again, the easy way',body:`
+    <p>When you need the same move lots of times, don't write it over and over — use a <b>loop</b>!</p>
+    <p>Instead of <span class="ex ex-move">Move</span> <span class="ex ex-move">Move</span> <span class="ex ex-move">Move</span> <span class="ex ex-move">Move</span>, use <span class="ex ex-loop">Repeat 4</span> with a <span class="ex ex-move">Move</span> inside. That means "do Move 4 times."</p>
+    <p>Tap the <b>+</b> and <b>–</b> to change the number. Same path, way fewer blocks — and fewer blocks earns more <b>stars</b>!</p>`},
+  8:{tag:'New idea',title:'If: let Bolt decide',body:`
+    <p>Sometimes Bolt should do different things depending on what's ahead. That's an <b>If</b> block.</p>
+    <p><span class="ex ex-if">If path is clear → do this, otherwise → do that</span></p>
+    <p><b>Example:</b> <span class="ex ex-if">If clear</span> → <span class="ex ex-move">Move</span>, otherwise → <span class="ex ex-turn">Turn right</span>. Bolt looks first, then chooses.</p>
+    <p>Put an If <b>inside a loop</b> and Bolt can check and react at every single step — all by itself.</p>`},
+  31:{tag:'New idea',title:'Repeat until: keep going till you arrive',body:`
+    <p>What if you don't know exactly how many steps it takes? Use <span class="ex ex-until">Repeat until battery</span>.</p>
+    <p>It runs your blocks over and over and stops the <b>moment</b> Bolt reaches the battery — no counting needed!</p>
+    <p><b>Example:</b> <span class="ex ex-until">Repeat until battery</span> → <span class="ex ex-if">If clear</span> <span class="ex ex-move">Move</span>, otherwise <span class="ex ex-turn">Turn right</span>.</p>`},
+  32:{tag:'New idea',title:'Look around and choose',body:`
+    <p>Bolt can peek to the <b>side</b>, not just ahead. On the If block, tap to check <b>on the left</b>, <b>ahead</b>, or <b>on the right</b>.</p>
+    <p>In a maze, this rule never gets lost — it keeps one hand on the wall:</p>
+    <ul class="iseq">
+      <li><span class="ex ex-if">If clear right</span> → <span class="ex ex-turn">Turn right</span> <span class="ex ex-move">Move</span></li>
+      <li>otherwise <span class="ex ex-if">if clear ahead</span> → <span class="ex ex-move">Move</span></li>
+      <li>otherwise → <span class="ex ex-turn">Turn left</span></li>
+    </ul>
+    <p>Wrap it in <span class="ex ex-until">Repeat until battery</span> and the same rule solves <b>any</b> maze.</p>`},
+  37:{tag:'New idea',title:'Functions: teach Bolt a move once',body:`
+    <p>If the same group of moves shows up again and again, teach it to Bolt as a <b>routine</b>.</p>
+    <p>Put the moves inside <span class="ex ex-fn">Define routine</span>, then use <span class="ex ex-fn">Do routine</span> wherever you need them.</p>
+    <p><b>Example:</b> Define routine = <span class="ex ex-move">Move</span> <span class="ex ex-move">Move</span> <span class="ex ex-turn">Turn right</span>. Then just <span class="ex ex-fn">Do routine</span> <span class="ex ex-fn">Do routine</span> <span class="ex ex-fn">Do routine</span> — three little blocks instead of nine!</p>`},
+  41:{tag:'New idea',title:'Variables: give your routine a number (n)',body:`
+    <p>A routine can take a <b>number</b>, called <b>n</b>. You choose n each time you use it.</p>
+    <p>Inside the routine, flip the <b>"use n"</b> switch on a Repeat so it becomes <span class="ex ex-loop">Repeat n</span> — that means "do it <b>n</b> times."</p>
+    <p>Then call it with different numbers:</p>
+    <ul class="iseq">
+      <li><span class="ex ex-fn">Do routine (n = 4)</span> → does it 4 times</li>
+      <li><span class="ex ex-fn">Do routine (n = 2)</span> → does it 2 times</li>
+    </ul>
+    <p>One routine, <b>any size</b>! The same routine handles a long stretch and a short one.</p>`},
+  45:{tag:'New idea',title:'Meet i: a number that counts itself',body:`
+    <p>You already know <b>n</b> — the number you <i>hand</i> to a routine. Now meet <b>i</b>, the loop's <b>counter</b>.</p>
+    <p>Every time a <span class="ex ex-loop">Repeat</span> goes around, <b>i</b> counts up all by itself: 1, then 2, then 3, then 4…</p>
+    <p>You can pass <b>i</b> straight into your routine! Flip <b>"use i"</b> on <span class="ex ex-fn">Do routine</span> so it reads <span class="ex ex-fn">n = i</span>. Now <b>n becomes the current count</b> each time around:</p>
+    <ul class="iseq">
+      <li>Loop 1: <b>i</b> is 1, so <b>n</b> is 1</li>
+      <li>Loop 2: <b>i</b> is 2, so <b>n</b> is 2</li>
+      <li>Loop 3: <b>i</b> is 3, so <b>n</b> is 3</li>
+    </ul>
+    <p>So <span class="ex ex-loop">Repeat 4</span> → <span class="ex ex-fn">Do routine (n = i)</span> builds a <b>growing staircase</b>: 1, 2, 3, 4 — all from one tiny loop.</p>
+    <p class="small-note"><b>Remember:</b> <b>n</b> is the number your routine uses. <b>i</b> is the number that changes every loop. Connect them with <b>n = i</b> and the loop does the counting for you.</p>`},
+};
+const _seenIntro=new Set();
+function introForLevel(id){ let best=null; for(const k of Object.keys(INTRO).map(Number)){ if(k<=id) best=(best===null||k>best)?k:best; } return best; }
+function introSeen(k){ try{ return localStorage.getItem('codequest.intro.'+k)==='1'; }catch(e){ return _seenIntro.has(k); } }
+function markIntroSeen(k){ _seenIntro.add(k); try{ localStorage.setItem('codequest.intro.'+k,'1'); }catch(e){} }
+function openIntro(k){ if(!INTRO[k])return; const d=INTRO[k]; $('introTag').textContent=d.tag||'New idea'; $('introTitle').textContent=d.title; $('introBody').innerHTML=d.body; $('introOverlay').classList.add('show'); }
+function closeIntro(){ $('introOverlay').classList.remove('show'); }
+function maybeShowIntro(id){
+  if(!INTRO[id] || introSeen(id)) return;
+  setTimeout(()=>{
+    if(introSeen(id)) return;
+    if(document.querySelector('.overlay.show')) return; // don't stack over map/guide/win
+    markIntroSeen(id); openIntro(id);
+  }, 80);
 }
 function updateSwitchBtn(){
   const b=$('switchBtn');
@@ -1258,6 +1489,12 @@ $('runBtn').onclick=runProgram;
 $('resetBtn').onclick=resetRun;
 $('clearBtn').onclick=clearProgram;
 $('mapBtn').onclick=openMap;
+$('guideBtn').onclick=openGuide;
+$('guideClose').onclick=closeGuide;
+$('guideOverlay').onclick=(e)=>{ if(e.target.id==='guideOverlay') closeGuide(); };
+$('cbExample').onclick=()=>{ const k=introForLevel(current.id); if(k!=null) openIntro(k); };
+$('introClose').onclick=closeIntro;
+$('introOverlay').onclick=(e)=>{ if(e.target.id==='introOverlay') closeIntro(); };
 $('hintBtn').onclick=toggleHint;
 $('moreHint').onclick=()=>{ hintShown++; renderHints(); };
 $('winReplay').onclick=()=>{ $('winOverlay').classList.remove('show'); clearProgram(); };
